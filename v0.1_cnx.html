@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Faixa com 60 Divisões (Minutos)</title>
+    <title>Relógio com Ponto Marcador de Minutos Simplificado</title>
     <style>
         body {
             margin: 0;
@@ -75,42 +75,154 @@
             height: 12px;
         }
 
+        #draggable-point {
+            width: 24px;
+            height: 24px;
+            background-color: #e74c3c;
+            border-radius: 50%;
+            position: absolute;
+            cursor: grab;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 1001;
+            /* Posição inicial: alinha-se com a primeira marca (0 graus) */
+            top: -0.7%; 
+            left: -0%;
+            transform: translate(-50%, -50%); /* Centraliza o ponto na sua posição top/left */
+            transition: transform 0.1s ease-out; /* Suaviza o "snap" */
+        }
+
+        #draggable-point.grabbing {
+            cursor: grabbing;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
     </style>
 </head>
 <body>
 
-    <h1>Faixa com Divisões de Minuto</h1>
-    <p>A faixa azul agora tem 60 linhas brancas para representar os minutos.</p>
+    <h1>Relógio com Ponto Marcador de Minutos</h1>
+    <p>Arraste o ponto vermelho para marcar os minutos. Ele se ajustará para as divisões mais próximas.</p>
 
     <div class="clock-container" id="clock-container">
         <div class="outer-circle"></div>
         <div class="inner-circle"></div>
+        <div id="draggable-point"></div>
     </div>
 
     <script>
         const clockContainer = document.getElementById('clock-container');
-        const outerCircle = clockContainer.querySelector('.outer-circle');
-        const innerCircle = clockContainer.querySelector('.inner-circle');
+        const draggablePoint = document.getElementById('draggable-point');
 
-        const outerRadius = outerCircle.offsetWidth / 2;
-        const innerRadius = innerCircle.offsetWidth / 2;
+        // Calcula a posição do centro do clock-container
+        const centerX = clockContainer.offsetWidth / 2;
+        const centerY = clockContainer.offsetHeight / 2;
 
+        // O 'raio' onde o centro do ponto arrastável deve estar para alinhar com as marcas.
+        // Baseado na lógica de posicionamento das marcas: top: 3% (9px) e height: 24px para o ponto.
+        // Centro do ponto = 9px (top) + 12px (metade da altura) = 21px do topo do container.
+        // Distância do centro do container (150px) até o centro do ponto (21px) = 129px.
+        const pointAlignmentRadius = centerY - (clockContainer.offsetHeight * 0.03 + draggablePoint.offsetHeight / 2);
+        
+        // Array para armazenar as coordenadas exatas dos 60 pontos de snap
+        const snapPositions = [];
+
+        // Preenche os pontos de snap e cria as marcas de minuto
         for (let i = 0; i < 60; i++) {
             const mark = document.createElement('div');
             mark.classList.add('minute-mark');
 
-            const angle = i * 6;
+            const angle = i * 6; // 6 graus por minuto
 
             if (i % 5 === 0) {
                 mark.classList.add('hour-tick');
             }
 
+            // Posição visual das marcas de minuto
             mark.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
-            
             mark.style.left = '50%';
-            mark.style.top = '3%';
-
+            mark.style.top = '3%'; 
             clockContainer.appendChild(mark);
+
+            // Calcula a posição exata (x,y) no centro do clock-container onde o ponto deve "snapar"
+            // Estes são os centros dos pontos de snap, não as posições das div's das marcas
+            const snapX = centerX + Math.sin(angle * Math.PI / 180) * pointAlignmentRadius;
+            const snapY = centerY - Math.cos(angle * Math.PI / 180) * pointAlignmentRadius;
+            snapPositions.push({ x: snapX, y: snapY, angle: angle }); // Armazena o ângulo também
+        }
+
+        // --- Lógica do Ponto Arrastável Simplificada ---
+        let isDragging = false;
+
+        // Define a posição inicial do ponto para alinhar com a primeira marca (0 minutos)
+        const initialSnap = snapPositions[0];
+        setTranslatedPosition(initialSnap.x - (draggablePoint.offsetWidth / 2),
+                              initialSnap.y - (draggablePoint.offsetHeight / 2),
+                              draggablePoint);
+
+        draggablePoint.addEventListener('mousedown', dragStart);
+        document.addEventListener('mouseup', dragEnd);
+        document.addEventListener('mousemove', drag);
+
+        function dragStart(e) {
+            e.preventDefault(); 
+            isDragging = true;
+            draggablePoint.classList.add('grabbing');
+        }
+
+        function dragEnd(e) {
+            isDragging = false;
+            draggablePoint.classList.remove('grabbing');
+            // Ao soltar, o ponto já estará na posição de snap, então não precisa de ação extra aqui
+        }
+
+        function drag(e) {
+            if (!isDragging) return; // Só executa se estiver arrastando
+
+            // Obtém a posição atual do mouse em relação ao centro do clockContainer
+            const mouseX = e.clientX - clockContainer.getBoundingClientRect().left;
+            const mouseY = e.clientY - clockContainer.getBoundingClientRect().top;
+
+            // Calcula o vetor do centro do relógio para a posição do mouse
+            const dx = mouseX - centerX;
+            const dy = mouseY - centerY;
+
+            // Calcula o ângulo do mouse em relação ao centro do relógio
+            // `Math.atan2` retorna o ângulo em radianos entre -PI e PI.
+            // O 0 grau em relógios é no topo, então ajustamos a `y` e o sinal de `x`.
+            let mouseAngleRad = Math.atan2(dx, -dy); // Negar dy para 0deg ser para cima
+            if (mouseAngleRad < 0) {
+                mouseAngleRad += 2 * Math.PI; // Converte para 0 a 2*PI
+            }
+            const mouseAngleDeg = mouseAngleRad * (180 / Math.PI); // Converte para graus (0 a 360)
+
+            // Encontra o ponto de snap mais próximo pelo ângulo
+            let closestSnap = null;
+            let minAngleDiff = Infinity;
+
+            snapPositions.forEach(snap => {
+                let diff = Math.abs(mouseAngleDeg - snap.angle);
+                // Lida com a transição 360/0 graus para encontrar o mais próximo
+                if (diff > 180) {
+                    diff = 360 - diff;
+                }
+
+                if (diff < minAngleDiff) {
+                    minAngleDiff = diff;
+                    closestSnap = snap;
+                }
+            });
+
+            if (closestSnap) {
+                // Mova o ponto diretamente para a posição do snap mais próximo
+                setTranslatedPosition(closestSnap.x - (draggablePoint.offsetWidth / 2),
+                                      closestSnap.y - (draggablePoint.offsetHeight / 2),
+                                      draggablePoint);
+            }
+        }
+
+        // Função auxiliar para aplicar a posição usando translate (para centralizar o elemento)
+        function setTranslatedPosition(xPos, yPos, el) {
+            el.style.transform = `translate(${xPos}px, ${yPos}px)`;
         }
     </script>
 </body>
