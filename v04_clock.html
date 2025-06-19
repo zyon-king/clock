@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relógio Circular</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        
+        .clock {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            margin: 50px auto;
+        }
+        
+        .clock .numbers {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .clock .numbers span {
+            position: absolute;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .clock .numbers span.hour {
+            font-weight: bold;
+        }
+        
+        .clock .numbers span.inner-hour {
+            font-size: 18px;
+        }
+        
+        .time-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .time-label {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .time-input-container {
+            display: flex;
+            align-items: center;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        
+        .time-input-container input {
+            width: 50px;
+            font-size: 36px;
+            border: none;
+            text-align: center;
+            background-color: transparent;
+        }
+        
+        .time-input-container span {
+            font-size: 36px;
+            margin: 0 10px;
+        }
+        
+        #confirm-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            background-color: #4CAF50;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        #draggable-point {
+            width: 6px;
+            height: 30px; 
+            background-color: #e74c3c;
+            border-radius: 3px;
+            position: absolute;
+            cursor: grab;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 1001;
+            
+            /* Posiciona o ponteiro no centro do relógio */
+            top: 5%; 
+            left: 50%;
+            
+            /* Define o ponto de rotação para o centro do relógio (150px da base do ponteiro) */
+            /* O ponteiro gira a partir de sua base, não do seu centro. */
+            transform-origin: 50% 135px; 
+            
+            /* Translação inicial para centralizar horizontalmente e rotação inicial */
+            transform: translateX(-50%) rotate(0deg); 
+            transition: transform 0.1s ease-out; /* Suaviza o snap */
+        }
+
+        #draggable-point.grabbing {
+            cursor: grabbing;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="clock" id="clock-container">
+        <div class="numbers" id="hours"></div>
+        <div class="numbers" id="minutes" style="display: none;"></div>
+        <div id="draggable-point"></div> <div class="time-container">
+            <div class="time-label" id="time-label">Selecione a hora</div>
+            <div class="time-input-container">
+                <input type="text" id="hour-input" disabled>
+                <span>:</span>
+                <input type="text" id="minute-input" disabled>
+            </div>
+            <button id="confirm-button" style="display: none;">Confirmar</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Global Variables (agora definidas corretamente) ---
+        const clockContainer = document.getElementById('clock-container');
+        const draggablePoint = document.getElementById('draggable-point');
+        const minuteInput = document.getElementById('minute-input');
+        const confirmButton = document.getElementById('confirm-button');
+        const hourInput = document.getElementById('hour-input'); // Adicionando hour-input também
+
+        let horaSelecionada = null;
+        let minutoSelecionado = null;
+        let etapa = 'hora';
+
+        // Array para armazenar os ângulos de snap (graus)
+        let snapAngles = [];
+
+        //=====================================
+        // Horas de 1h - 12h
+        //=====================================
+        for (let i = 0; i < 12; i++) {
+            const angle = i * 30;
+            const x = 50 + Math.sin(angle * Math.PI / 180) * 45;
+            const y = 50 - Math.cos(angle * Math.PI / 180) * 45;
+            
+            const span = document.createElement('span');
+            span.textContent = i === 0 ? '12' : i;
+            span.style.top = `${y}%`;
+            span.style.left = `${x}%`;
+            span.style.transform = 'translate(-50%, -50%)';
+            span.classList.add('hour');
+            span.dataset.value = i === 0 ? '12' : String(i).padStart(2, '0');
+            
+            span.addEventListener('mouseover', () => {
+                hourInput.value = span.dataset.value; // Usando hourInput
+            });
+            
+            span.addEventListener('click', () => {
+                if (etapa === 'hora') {
+                    horaSelecionada = span.dataset.value;
+                    hourInput.value = horaSelecionada; // Usando hourInput
+                    document.getElementById('hours').style.display = 'none';
+                    document.getElementById('minutes').style.display = 'block';
+                    etapa = 'minuto';
+                    document.getElementById('time-label').innerText = 'Selecione os minutos';
+                    criarMinutos();
+                }
+            });
+            
+            document.getElementById('hours').appendChild(span);
+        }
+        
+        //=====================================
+        // Horas de 00h - 13h
+        //=====================================
+        for (let i = 0; i < 12; i++) {
+            const angle = i * 30;
+            const x = 50 + Math.sin(angle * Math.PI / 180) * 30;
+            const y = 50 - Math.cos(angle * Math.PI / 180) * 30;
+            
+            const span = document.createElement('span');
+            
+            span.textContent = i + 12;
+            if (i === 0) span.textContent = '00';
+            span.style.top = `${y}%`;
+            span.style.left = `${x}%`;
+            span.style.transform = 'translate(-50%, -50%)';
+            span.classList.add('inner-hour');
+            span.dataset.value = i === 0 ? '00' : String(i + 12);
+            
+            span.addEventListener('mouseover', () => {
+                hourInput.value = span.dataset.value; // Usando hourInput
+            });
+            
+            span.addEventListener('click', () => {
+                if (etapa === 'hora') {
+                    horaSelecionada = span.dataset.value;
+                    hourInput.value = horaSelecionada; // Usando hourInput
+                    document.getElementById('hours').style.display = 'none';
+                    document.getElementById('minutes').style.display = 'block';
+                    etapa = 'minuto';
+                    document.getElementById('time-label').innerText = 'Selecione os minutos';
+                    criarMinutos();
+                }
+            });
+            
+            document.getElementById('hours').appendChild(span);
+        }
+        
+        // =====================================
+        // Minutos
+        // =====================================
+        function criarMinutos() {
+            const minutesContainer = document.getElementById('minutes');
+            minutesContainer.innerHTML = '';
+            snapAngles = []; // Limpa os ângulos de snap para recriação
+
+            for (let i = 0; i < 60; i++) {
+                const angle = i * 6; // Ângulo em graus para cada minuto
+                snapAngles.push(angle);
+
+                const x = 50 + Math.sin(angle * Math.PI / 180) * 40;
+                const y = 50 - Math.cos(angle * Math.PI / 180) * 40;
+
+                const span = document.createElement('span');
+                span.textContent = String(i).padStart(2, '0');
+                span.style.top = `${y}%`;
+                span.style.left = `${x}%`;
+                span.style.transform = 'translate(-50%, -50%)';
+                span.dataset.minute = String(i).padStart(2, '0');
+
+                span.addEventListener('mouseover', () => {
+                    minuteInput.value = span.textContent;
+                });
+
+                span.addEventListener('click', () => {
+                    minutoSelecionado = span.textContent;
+                    minuteInput.value = minutoSelecionado;
+                    confirmButton.style.display = 'block';
+                    draggablePoint.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+                });
+
+                if (i % 5 !== 0) {
+                    span.style.opacity = 0;
+                }
+
+                minutesContainer.appendChild(span);
+            }
+
+            // Define a posição inicial do ponteiro para 0 minutos (topo) e atualiza o input
+            draggablePoint.style.transform = `translateX(-50%) rotate(${snapAngles[0]}deg)`;
+            minuteInput.value = '00'; // Define o valor inicial como '00'
+        }
+
+        // --- Lógica do Ponteiro Arrastável ---
+        let isDragging = false;
+
+        // Calcular centerX e centerY após o carregamento do DOM
+        const centerX = clockContainer.getBoundingClientRect().width / 2;
+        const centerY = clockContainer.getBoundingClientRect().height / 2;
+
+
+        draggablePoint.addEventListener('mousedown', dragStart);
+        document.addEventListener('mouseup', dragEnd);
+        document.addEventListener('mousemove', drag);
+
+        function dragStart(e) {
+            e.preventDefault();
+            isDragging = true;
+            draggablePoint.classList.add('grabbing');
+        }
+
+        function dragEnd(e) {
+            isDragging = false;
+            draggablePoint.classList.remove('grabbing');
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+
+            const mouseX = e.clientX - clockContainer.getBoundingClientRect().left;
+            const mouseY = e.clientY - clockContainer.getBoundingClientRect().top;
+
+            const dx = mouseX - centerX;
+            const dy = mouseY - centerY;
+
+            let mouseAngleRad = Math.atan2(dx, -dy);
+            if (mouseAngleRad < 0) {
+                mouseAngleRad += 2 * Math.PI;
+            }
+            const mouseAngleDeg = mouseAngleRad * (180 / Math.PI);
+
+            // Encontra o ângulo de snap mais próximo usando Math.min e map
+            const closestSnapAngle = snapAngles.reduce((prev, curr) => {
+                let diffPrev = Math.abs(mouseAngleDeg - prev);
+                let diffCurr = Math.abs(mouseAngleDeg - curr);
+
+                // Lida com a transição 360/0 graus
+                if (diffPrev > 180) diffPrev = 360 - diffPrev;
+                if (diffCurr > 180) diffCurr = 360 - diffCurr;
+
+                return (diffCurr < diffPrev) ? curr : prev;
+            });
+
+            const snappedMinute = String(closestSnapAngle / 6).padStart(2, '0');
+
+            // Aplica a rotação ao ponteiro
+            draggablePoint.style.transform = `translateX(-50%) rotate(${closestSnapAngle}deg)`;
+
+            // Atualiza o campo de input e a variável global
+            minuteInput.value = snappedMinute;
+            minutoSelecionado = snappedMinute;
+            confirmButton.style.display = 'block';
+        }
+
+        // Chamada inicial para criar os minutos quando o script é carregado
+        // Note: criarMinutos() é chamado após a seleção da hora,
+        // mas o ponteiro precisa de uma posição inicial.
+        // O `draggable-point` é configurado inicialmente com `rotate(0deg)` no CSS.
+        // Se você quer que ele comece em 00 minutos antes de criarMinutos() ser chamado,
+        // ele já está ok com o CSS.
+        // Se quiser que ele se atualize dinamicamente, isso acontecerá quando criarMinutos() for chamado.
+    </script>
+</body>
+</html>
