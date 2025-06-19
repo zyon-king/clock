@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faixa com 60 Divisões (Minutos)</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-top: 0;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .clock-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .outer-circle {
+            width: 300px;
+            height: 300px;
+            background-color: #3498db; /* Azul */
+            border-radius: 50%;
+            position: absolute;
+            top: 0; /* Posiciona no canto superior esquerdo do container */
+            left: 0;
+        }
+
+        .inner-circle {
+            width: 200px; /* Diâmetro menor */
+            height: 200px;
+            background-color: #f0f0f0; /* Cor do fundo do body para criar a faixa */
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* Centraliza o círculo menor no maior */
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .minute-mark {
+            position: absolute;
+            background-color: #fff; /* Cor das linhas das divisões */
+            width: 2px; /* Largura da linha */
+            height:8px; /* Altura da linha (dentro da faixa) */
+            transform-origin: 50% 145px; /* Pivô de rotação */	
+        }
+        
+        /* Opcional: Estilo diferente para cada 5 minutos (marca de hora) */
+        .minute-mark.hour-tick {
+            background-color: #fff; /* Mais visível */
+            width: 3px;
+            height: 12px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Faixa com Divisões de Minuto</h1>
+    <p>A faixa azul agora tem 60 linhas brancas para representar os minutos.</p>
+
+    <div class="clock-container" id="clock-container">
+        <div class="outer-circle"></div>
+        <div class="inner-circle"></div>
+    </div>
+
+    <script>
+        // Obtém o contêiner do relógio
+        const clockContainer = document.getElementById('clock-container');
+        const outerCircle = clockContainer.querySelector('.outer-circle');
+        const innerCircle = clockContainer.querySelector('.inner-circle');
+
+        // Calcula o raio do círculo maior e do círculo menor (em pixels)
+        // Isso é necessário para posicionar as marcas na faixa
+        const outerRadius = outerCircle.offsetWidth / 2; // 150px
+        const innerRadius = innerCircle.offsetWidth / 2; // 100px
+
+        // O ponto médio da faixa onde as linhas começarão/terminarão
+        // Para que as linhas fiquem DENTRO da faixa, elas devem começar em 'innerRadius'
+        // e se estender até 'outerRadius'.
+        // O centro do container é (0,0) para transformações.
+
+        // Loop para criar 60 marcas de minuto
+        for (let i = 0; i < 60; i++) {
+            const mark = document.createElement('div');
+            mark.classList.add('minute-mark');
+
+            // Cada marca é 6 graus (360 / 60)
+            const angle = i * 6;
+
+            // Se for uma marca de 5 em 5 minutos (hora), damos um estilo diferente
+            if (i % 5 === 0) {
+                mark.classList.add('hour-tick');
+            }
+
+            // A rotação é feita em torno do centro do relógio.
+            // As linhas são posicionadas no centro do .clock-container
+            // e depois rotacionadas.
+            mark.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+            
+            // Posicionamento da marca do centro do relógio para fora, na faixa.
+            // O `transform-origin` no CSS é a chave aqui, pois ele define o ponto
+            // de rotação das linhas para o centro do círculo.
+            // 'top' e 'left' são usados para colocar o ponto de rotação da marca
+            // no centro do 'clock-container'.
+            mark.style.left = '50%';
+            mark.style.top = '3%';
+
+            clockContainer.appendChild(mark);
+        }
+    </script>
+</body>
+</html>
