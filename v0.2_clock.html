@@ -104,37 +104,6 @@
     </div>
 
     <script>
-    	function criarPonteiro(elementId) {
-    const ponteiro = document.createElement('div');
-    ponteiro.style.position = 'absolute';
-    ponteiro.style.top = '50%';
-    ponteiro.style.left = '50%';
-    ponteiro.style.transformOrigin = 'top center';
-    ponteiro.style.width = '2px';
-    ponteiro.style.height = '40%';
-    ponteiro.style.background = 'black';
-    ponteiro.style.transform = 'rotate(0deg)';
-    document.getElementById(elementId).appendChild(ponteiro);
-
-    document.getElementById(elementId).addEventListener('mousemove', (event) => {
-        const rect = event.target.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        const angle = Math.atan2(y - rect.height / 2, x - rect.width / 2);
-        const graus = (angle * 180 / Math.PI + 90) % 360;
-        ponteiro.style.transform = `translate(-50%, 0%) rotate(${graus}deg)`;
-        
-    });
-}
-
-criarPonteiro('hours');
-criarPonteiro('minutes');
-document.getElementById('minutes').style.display = 'none';
-		
-    
-        let horaSelecionada = null;
-        let minutoSelecionado = null;
-        let etapa = 'hora';
 
         for (let i = 0; i < 12; i++) {
             const angle = i * 30;
@@ -174,13 +143,13 @@ document.getElementById('minutes').style.display = 'none';
             const y = 50 - Math.cos(angle * Math.PI / 180) * 30;
             
             const span = document.createElement('span');
-            span.textContent = i + 13;
-            if (i === 11) span.textContent = '00';
+            span.textContent = i + 12;
+            if (i === 0) span.textContent = '00';
             span.style.top = `${y}%`;
             span.style.left = `${x}%`;
             span.style.transform = 'translate(-50%, -50%)';
             span.classList.add('inner-hour');
-            span.dataset.value = i === 11 ? '00' : i + 13;
+            span.dataset.value = i === 0 ? '00' : i + 12;
             
             span.addEventListener('mouseover', () => {
                 document.getElementById('hour-input').value = span.dataset.value;
