@@ -104,7 +104,10 @@
     </div>
 
     <script>
-
+		//=====================================
+		// horas de 1h - 12h
+		//=====================================
+        
         for (let i = 0; i < 12; i++) {
             const angle = i * 30;
             const x = 50 + Math.sin(angle * Math.PI / 180) * 45;
@@ -116,7 +119,7 @@
             span.style.left = `${x}%`;
             span.style.transform = 'translate(-50%, -50%)';
             span.classList.add('hour');
-            span.dataset.value = i === 0 ? '12' : i;
+            span.dataset.value = i === 0 ? '12' : String(i).padStart(2, '0');
             
             span.addEventListener('mouseover', () => {
                 document.getElementById('hour-input').value = span.dataset.value;
@@ -136,21 +139,25 @@
             
             document.getElementById('hours').appendChild(span);
         }
-
+        
+		//=====================================
+		// horas de 00h - 13h
+		//=====================================
         for (let i = 0; i < 12; i++) {
             const angle = i * 30;
             const x = 50 + Math.sin(angle * Math.PI / 180) * 30;
             const y = 50 - Math.cos(angle * Math.PI / 180) * 30;
             
             const span = document.createElement('span');
+            
             span.textContent = i + 12;
             if (i === 0) span.textContent = '00';
             span.style.top = `${y}%`;
             span.style.left = `${x}%`;
             span.style.transform = 'translate(-50%, -50%)';
             span.classList.add('inner-hour');
-            span.dataset.value = i === 0 ? '00' : i + 12;
-            
+            span.dataset.value = i === 0 ? '00' : String(i + 12);
+                       
             span.addEventListener('mouseover', () => {
                 document.getElementById('hour-input').value = span.dataset.value;
             });
@@ -169,7 +176,10 @@
             
             document.getElementById('hours').appendChild(span);
         }
-
+        
+		//=====================================
+		// minutos
+		//=====================================
         function criarMinutos() {
           for (let i = 0; i < 60; i++) {
               const angle = i * 6;
