@@ -55,8 +55,6 @@
             margin: 0; /* Remove margem inferior para não afetar o layout */
             /* letter-spacing: 5px; - Removido ou ajustado como discutido anteriormente para estabilidade */
             transition: color 0.5s ease-in-out;
-            /* Força o uso de fontes monoespaçadas para estabilizar a largura */
-            font-family: 'Roboto Mono', 'Space Mono', monospace, sans-serif;
             white-space: nowrap; /* Impede quebra de linha */
             overflow: hidden; /* Oculta qualquer pixel excedente */
             display: inline-block; /* Permite que a largura e o padding funcionem */
@@ -111,7 +109,7 @@
             margin-bottom: 30px;
         }
         
-        .time-label .span {
+        .time-label {
         	font-size: clamp(0.75rem, 2.5vw, 1.5rem); /* Tamanho responsivo, ligeiramente ajustado */
             color: #00ffcc; /* Cor verde neon */
             text-shadow: 0 0 20px rgba(0, 255, 204, 0.8), 0 0 30px rgba(0, 255, 204, 0.6);
@@ -141,6 +139,7 @@
         }
         
         .time-input-container input {
+        	font-family: 'Orbitron', sans-serif; 
             width: clamp(45px, 10vw, 60px);
             font-size: clamp(28px, 6vw, 40px);
             border: none;
