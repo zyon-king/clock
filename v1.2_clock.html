@@ -55,8 +55,6 @@
             margin: 0; /* Remove margem inferior para não afetar o layout */
             /* letter-spacing: 5px; - Removido ou ajustado como discutido anteriormente para estabilidade */
             transition: color 0.5s ease-in-out;
-            /* Força o uso de fontes monoespaçadas para estabilizar a largura */
-            font-family: 'Roboto Mono', 'Space Mono', monospace, sans-serif;
             white-space: nowrap; /* Impede quebra de linha */
             overflow: hidden; /* Oculta qualquer pixel excedente */
             display: inline-block; /* Permite que a largura e o padding funcionem */
@@ -85,24 +83,24 @@
 
         /* --- Estilos para o RELÓGIO CIRCULAR (de seleção de hora) --- */
         /* Mantenho os estilos do relógio circular caso você queira usá-lo */
-        .container {
-            background: rgba(255, 255, 255, 0.95);
+        .container { /* Renomeado de .clock-container para clareza */
+            background: rgba(0, 0, 0, 0.7); /* Fundo semi-transparente */
+            backdrop-filter: blur(10px); /* Efeito de desfoque */
+            border-radius: 20px;
+            padding: 0.5vh 1.5vw; /* Padding responsivo para o quadro */
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            z-index: 20; /* Garante que fique acima de outros elementos */
             animation: fadeInScale 1s ease-out; /* Animação de entrada */
-            backdrop-filter: blur(10px);
-            border-radius: 25px;
-            padding: 40px;
-            box-shadow: 
-                0 20px 40px rgba(0, 0, 0, 0.1),
-                0 8px 16px rgba(0, 0, 0, 0.06),
-                inset 0 1px 0 rgba(255, 255, 255, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            max-width: 500px;
-            width: 100%;
-            margin-top: 20px; /* Para não colidir com o relógio digital no topo */
-            
-            max-width: 60%; /* Largura máxima do container, pode ajustar */
-            width: calc(100% - 40px); /* 100% da largura da tela menos 40px (20px de cada lado) */
+
+            /* --- POSICIONAMENTO PARA O CANTO SUPERIOR DIREITO --- */
+            position: relative; /* Posição absoluta em relação ao body */
+            top: 50%; /* Distância do topo */
+            right: 0%; /* Distância da direita */
+            transform: none; /* Remove qualquer transformação indesejada de centralização */
         }
+
         
         .time-container {
             display: flex;
@@ -112,13 +110,14 @@
         }
         
         .time-label {
-            font-size: clamp(16px, 3vw, 20px);
-            margin-bottom: 15px;
-            text-align: center;
-            color: #2c3e50;
-            font-weight: 600;
+        	font-size: clamp(0.75rem, 2.5vw, 1.5rem); /* Tamanho responsivo, ligeiramente ajustado */
+            color: #00ffcc; /* Cor verde neon */
+            text-shadow: 0 0 20px rgba(0, 255, 204, 0.8), 0 0 30px rgba(0, 255, 204, 0.6);
+            margin: 10px;
+            letter-spacing: 5px; /* Espaçamento entre letras */
+            transition: color 0.5s ease-in-out;
         }
-        
+            
         .time-input-container {
             display: flex;
             align-items: center;
@@ -140,7 +139,8 @@
         }
         
         .time-input-container input {
-            width: clamp(45px, 10vw, 60px);
+        	font-family: 'Orbitron', sans-serif; 
+            width: clamp(65px, 10vw, 60px);
             font-size: clamp(28px, 6vw, 40px);
             border: none;
             text-align: center;
@@ -153,17 +153,19 @@
         .time-input-container span {
             font-size: clamp(28px, 6vw, 40px);
             margin: 0 10px;
-            color: #3498db;
+            color: black;
             font-weight: bold;
         }
         
         .clock { /* Este é o relógio circular */
             position: relative;
+            margin-top: 65px;
+            margin-left: 65px;
             width: min(400px, 90vw);
             height: min(400px, 90vw);
             border-radius: 50%;
             background: linear-gradient(145deg, #ffffff, #f8f9fa);
-            margin: 0 auto;
+            margin: 10px; /*  */
             touch-action: none;
             box-shadow: 
                 0 10px 30px rgba(0, 0, 0, 0.1),
@@ -241,7 +243,8 @@
         #confirm-button {
             margin-top: 25px;
             padding: 12px 30px;
-            font-size: clamp(16px, 3vw, 18px);
+            font-size: clamp(16px, 3vw, 18px);            
+        	font-family: 'Orbitron', sans-serif; 
             border: none;
             border-radius: 12px;
             background: linear-gradient(145deg, #27ae60, #2ecc71);
@@ -277,11 +280,12 @@
                 <input type="text" id="minute-input" disabled>
             </div>
             <button id="confirm-button" style="display: none;">Confirmar</button>
-        </div>
-        
-        <div class="clock" id="clock-selector-container"> <div class="numbers" id="hours"></div>
+         </div>
+         
+         <div class="clock" id="clock-selector-container"> <div class="numbers" id="hours"></div>
             <div class="numbers" id="minutes" style="display: none;"></div>
         </div>
+         
     </div>
 
     <script>
@@ -338,7 +342,7 @@
             span.style.left = `${x}%`;
             span.style.transform = 'translate(-50%, -50%)';
             span.classList.add('hour');
-            span.dataset.value = i === 0 ? '12' : i;
+            span.dataset.value = (i === 0 ? '12' : String(i).padStart(2, '0'));
             
             span.addEventListener('mouseover', () => {
                 document.getElementById('hour-input').value = span.dataset.value;
@@ -414,7 +418,7 @@
                 }
 
                 mark.style.transform = `translateX(-50%) rotate(${angle}deg)`;
-                mark.style.transformOrigin = '50% 200px'; 
+                mark.style.transformOrigin = '50% 195px'; 
                 
                 mark.dataset.value = String(i).padStart(2, '0');
                 
@@ -439,6 +443,7 @@
                     span.style.top = `${y}%`;
                     span.style.left = `${x}%`;
                     span.style.transform = 'translate(-50%, -50%)';
+                    
 
                     span.addEventListener('mouseover', () => {
                         document.getElementById('minute-input').value = span.textContent;
