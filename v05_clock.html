@@ -106,11 +106,10 @@
             cursor: grab;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             z-index: 1001;
-            top: 7%;
+            top: 12.5%;
             left: 50%;
-            transform-origin: 50% clamp(140px, 20vw, 170px);
+            transform-origin: 50% clamp(150px, 20vw, 170px);
             transform: translateX(-50%) rotate(0deg);
-            transition: transform 0.1s ease-out;
             touch-action: none;
         }
 
@@ -118,6 +117,11 @@
             cursor: grabbing;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             transform: translateX(-50%) rotate(var(--rotation, 0deg)) scale(1.2);
+        }
+
+        /* Removida a transição automática para evitar conflitos */
+        #draggable-point.smooth-transition {
+            transition: transform 0.1s ease-out;
         }
 
         @media (max-width: 768px) {
@@ -185,6 +189,7 @@
                 this.currentStep = 'hora';
                 this.snapAngles = [];
                 this.isDragging = false;
+                this.lastAngle = 0; // Para controle de transição suave
             }
 
             setupEventListeners() {
@@ -259,6 +264,7 @@
                 }
 
                 // Posição inicial do ponteiro
+                this.lastAngle = 0;
                 this.updatePointerRotation(0);
                 this.minuteInput.value = '00';
             }
@@ -321,12 +327,42 @@
                 this.selectedMinute = minute;
                 this.minuteInput.value = minute;
                 this.confirmButton.style.display = 'block';
-                this.updatePointerRotation(angle);
+                this.updatePointerRotationSmooth(angle);
+            }
+
+            // Nova função para atualização suave do ponteiro
+            updatePointerRotationSmooth(targetAngle) {
+                // Calcula o caminho mais curto considerando a natureza circular
+                const normalizedTarget = this.normalizeAngle(targetAngle);
+                const normalizedCurrent = this.normalizeAngle(this.lastAngle);
+                
+                let finalAngle = normalizedTarget;
+                
+                // Se a diferença for maior que 180°, escolhe o caminho mais curto
+                const diff = normalizedTarget - normalizedCurrent;
+                if (Math.abs(diff) > 180) {
+                    if (diff > 0) {
+                        finalAngle = normalizedTarget - 360;
+                    } else {
+                        finalAngle = normalizedTarget + 360;
+                    }
+                }
+                
+                this.lastAngle = finalAngle;
+                this.draggablePoint.style.transform = `translateX(-50%) rotate(${finalAngle}deg)`;
+            }
+
+            // Função para normalizar ângulos (0-359°)
+            normalizeAngle(angle) {
+                while (angle < 0) angle += 360;
+                while (angle >= 360) angle -= 360;
+                return angle;
             }
 
             updatePointerRotation(angle) {
-                this.draggablePoint.style.setProperty('--rotation', `${angle}deg`);
+                // Versão sem transição suave para uso durante drag
                 this.draggablePoint.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+                this.lastAngle = angle;
             }
 
             getCenterCoordinates() {
@@ -362,6 +398,7 @@
         class DragHandler {
             constructor(clock) {
                 this.clock = clock;
+                this.lastSnappedAngle = 0;
             }
 
             start(e) {
@@ -370,6 +407,7 @@
                 e.preventDefault();
                 this.clock.isDragging = true;
                 this.clock.draggablePoint.classList.add('grabbing');
+                this.lastSnappedAngle = this.clock.lastAngle;
             }
 
             move(e) {
@@ -380,14 +418,34 @@
                 const coords = this.getEventCoordinates(e);
                 const center = this.clock.getCenterCoordinates();
                 
-                const angle = this.calculateAngle(coords, center);
-                const snappedAngle = this.findClosestSnapAngle(angle);
+                const rawAngle = this.calculateAngle(coords, center);
+                const snappedAngle = this.findClosestSnapAngle(rawAngle);
+                
+                // Aplica lógica de transição suave apenas se o ângulo mudou significativamente
+                const smoothAngle = this.calculateSmoothTransition(snappedAngle);
                 const minute = this.angleToMinute(snappedAngle);
                 
-                this.clock.updatePointerRotation(snappedAngle);
+                this.clock.updatePointerRotation(smoothAngle);
                 this.clock.minuteInput.value = minute;
                 this.clock.selectedMinute = minute;
                 this.clock.confirmButton.style.display = 'block';
+                
+                this.lastSnappedAngle = smoothAngle;
+            }
+
+            calculateSmoothTransition(targetAngle) {
+                const diff = targetAngle - this.lastSnappedAngle;
+                
+                // Se a diferença for muito grande (cruzando o 0), ajusta para o caminho mais curto
+                if (Math.abs(diff) > 180) {
+                    if (diff > 0) {
+                        return this.lastSnappedAngle + (diff - 360);
+                    } else {
+                        return this.lastSnappedAngle + (diff + 360);
+                    }
+                }
+                
+                return targetAngle;
             }
 
             end(e) {
@@ -395,6 +453,11 @@
                     e.preventDefault();
                     this.clock.isDragging = false;
                     this.clock.draggablePoint.classList.remove('grabbing');
+                    
+                    // Normaliza o ângulo final para evitar acúmulo
+                    const normalizedAngle = this.clock.normalizeAngle(this.lastSnappedAngle);
+                    this.clock.updatePointerRotation(normalizedAngle);
+                    this.clock.lastAngle = normalizedAngle;
                 }
             }
 
@@ -436,7 +499,7 @@
             }
 
             angleToMinute(angle) {
-                return (angle / 6).toString().padStart(2, '0');
+                return Math.round(angle / 6).toString().padStart(2, '0');
             }
         }
 
