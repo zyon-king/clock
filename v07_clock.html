@@ -96,7 +96,7 @@
         .minute-mark {
             position: absolute;
             background-color: #666;
-            transform-origin: 50% clamp(145px, 20vw, 170px);
+            transform-origin: 50% clamp(140px, 20vw, 170px);
             z-index: 10;
         }
 
@@ -112,9 +112,7 @@
             background-color: #999;
         }
         /* Tick fica igual ao ponteiro no hover */
-        .minute-mark:hover,
-        .minute:hover + .minute-mark,
-        span[data-minute]:hover ~ .minute-mark[data-angle] {
+        .minute-mark:hover {
             width: clamp(8px, 1.5vw, 12px);
             height: clamp(25px, 5vw, 35px);
             background-color: #e74c3c;
@@ -125,9 +123,7 @@
             z-index: 1001;
             top: 12.5%;
             left: 50%;
-            transform-origin: 50% clamp(150px, 20vw, 170px);
-            transform: translateX(-50%) rotate(0deg);
-            touch-action: none;
+            
         }
         
         #confirm-button {
@@ -182,6 +178,7 @@
                 width: 15px;
                 height: 40px;
                 border-radius: 7px;
+                transform-origin: 50% clamp(325%, 20vw, 170px);
             }
             
             .clock .numbers span {
@@ -316,7 +313,7 @@ initializeState() {
                     // Posicionamento da marca
                     mark.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
                     mark.style.left = '50%';
-                    mark.style.top = '16%';
+                    mark.style.top = '11%';
                     this.clockContainer.appendChild(mark);
 
                     // Criar TODOS os números de minutos (0-59)
