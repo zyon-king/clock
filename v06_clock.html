@@ -39,12 +39,20 @@
             -ms-user-select: none;
         }
         
+        .clock .numbers span:hover {
+            font-size: clamp(16px, 2.9vw, 24px);
+        }
+        
         .clock .numbers span.hour {
             font-weight: bold;
         }
         
         .clock .numbers span.inner-hour {
             font-size: clamp(14px, 2vw, 18px);
+        }
+        
+        .clock .numbers span.inner-hour:hover {
+            font-size: clamp(14px, 2.7vw, 18px);
         }
         
         .time-container {
