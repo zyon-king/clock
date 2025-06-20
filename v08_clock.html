@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relógio Circular Responsivo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.1),
+                0 8px 16px rgba(0, 0, 0, 0.06),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .time-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .time-label {
+            font-size: clamp(16px, 3vw, 20px);
+            margin-bottom: 15px;
+            text-align: center;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .time-input-container {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            border: 2px solid #e1e8ed;
+            padding: 12px 20px;
+            border-radius: 15px;
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.06),
+                0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .time-input-container:hover {
+            border-color: #3498db;
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.06),
+                0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .time-input-container input {
+            width: clamp(45px, 10vw, 60px);
+            font-size: clamp(28px, 6vw, 40px);
+            border: none;
+            text-align: center;
+            background-color: transparent;
+            color: #2c3e50;
+            font-weight: bold;
+            outline: none;
+        }
+        
+        .time-input-container span {
+            font-size: clamp(28px, 6vw, 40px);
+            margin: 0 10px;
+            color: #3498db;
+            font-weight: bold;
+        }
+        
+        .clock {
+            position: relative;
+            width: min(400px, 90vw);
+            height: min(400px, 90vw);
+            border-radius: 50%;
+            background: linear-gradient(145deg, #ffffff, #f8f9fa);
+            margin: 0 auto;
+            touch-action: none;
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+        
+        .clock .numbers {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .clock .numbers span {
+            position: absolute;
+            font-size: clamp(16px, 2.5vw, 24px);
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            color: #2c3e50;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+        }
+        
+        .clock .numbers span:hover {
+            background: linear-gradient(145deg, #3498db, #2980b9);
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+        }
+        
+        .clock .numbers span.hour {
+            font-weight: bold;
+        }
+        
+        .clock .numbers span.inner-hour {
+            font-size: clamp(14px, 2vw, 18px);
+            width: 30px;
+            height: 30px;
+            color: #7f8c8d;
+        }
+        
+        .minute-mark {
+            position: absolute;
+            background-color: #bdc3c7;
+            transform-origin: 50% clamp(140px, 20vw, 170px);
+            z-index: 10;
+            border-radius: 1px;
+        }
+
+        .minute-mark.major-tick {
+            width: 2px;
+            height: 15px;
+            background-color: #34495e;
+        }
+
+        .minute-mark.minor-tick {
+            width: 1px;
+            height: 8px;
+            background-color: #bdc3c7;
+        }
+        
+        .minute-mark:hover {
+            width: clamp(10px, 2vw, 14px);
+            height: clamp(30px, 6vw, 40px);
+            background: linear-gradient(145deg, #e74c3c, #c0392b);
+            border-radius: 50%;
+            position: absolute;
+            cursor: grab;
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+            z-index: 1001;
+            top: 12.5%;
+            left: 50%;
+        }
+        
+        #confirm-button {
+            margin-top: 25px;
+            padding: 12px 30px;
+            font-size: clamp(16px, 3vw, 18px);
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(145deg, #27ae60, #2ecc71);
+            color: #fff;
+            cursor: pointer;
+            touch-action: manipulation;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+        }
+        
+        #confirm-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+        }
+        
+        #confirm-button:active {
+            transform: translateY(0);
+        }
+
+        #draggable-point {
+            width: clamp(10px, 2vw, 14px);
+            height: clamp(30px, 6vw, 40px);
+            background: linear-gradient(145deg, #e74c3c, #c0392b);
+            border-radius: 50%;
+            position: absolute;
+            cursor: grab;
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+            z-index: 1001;
+            top: 12.5%;
+            left: 50%;
+            transform-origin: 50% clamp(150px, 20vw, 170px);
+            transform: translateX(-50%) rotate(0deg);
+            touch-action: none;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+        }
+
+        #draggable-point.grabbing {
+            cursor: grabbing;
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.6);
+            transform: translateX(-50%) rotate(var(--rotation, 0deg)) scale(1.2);
+        }
+        
+        #draggable-point.hidden {
+            display: none;
+        }
+
+        #draggable-point.smooth-transition {
+            transition: transform 0.1s ease-out;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            #draggable-point {
+                width: 12px;
+                height: 35px;
+                border-radius: 6px;
+                transform-origin: 50% clamp(150px, 25vw, 170px);
+            }
+            
+            .clock .numbers span {
+                width: 30px;
+                height: 30px;
+                font-size: clamp(14px, 3vw, 18px);
+            }
+            
+            .clock .numbers span.inner-hour {
+                width: 25px;
+                height: 25px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .time-input-container {
+                padding: 8px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="time-container">
+            <div class="time-label" id="time-label">Selecione a hora</div>
+            <div class="time-input-container">
+                <input type="text" id="hour-input" disabled>
+                <span>:</span>
+                <input type="text" id="minute-input" disabled>
+            </div>
+            <button id="confirm-button" style="display: none;">Confirmar</button>
+        </div>
+        
+        <div class="clock" id="clock-container">
+            <div class="numbers" id="hours"></div>
+            <div class="numbers" id="minutes" style="display: none;"></div>
+            <div id="draggable-point"></div>
+        </div>
+    </div>
+
+    <script>
+        // Classe principal do relógio
+        class ResponsiveClock {
+            constructor() {
+                this.initializeElements();
+                this.initializeState();
+                this.setupEventListeners();
+                this.createHours();
+            }
+
+            initializeElements() {
+                this.clockContainer = document.getElementById('clock-container');
+                this.draggablePoint = document.getElementById('draggable-point');
+                this.hourInput = document.getElementById('hour-input');
+                this.minuteInput = document.getElementById('minute-input');
+                this.confirmButton = document.getElementById('confirm-button');
+                this.timeLabel = document.getElementById('time-label');
+                this.hoursContainer = document.getElementById('hours');
+                this.minutesContainer = document.getElementById('minutes');
+            }
+
+            initializeState() {
+                this.selectedHour = null;
+                this.selectedMinute = null;
+                this.currentStep = 'hora';
+                this.snapAngles = [];
+                this.isDragging = false;
+                this.lastAngle = 0;
+                this.lastHoveredMinute = null;
+            }
+
+            setupEventListeners() {
+                this.addDragListeners();
+                
+                window.addEventListener('resize', this.debounce(() => {
+                    this.recalculatePositions();
+                }, 100));
+            }
+
+            addDragListeners() {
+                const dragHandler = new DragHandler(this);
+                
+                // Mouse events
+                this.draggablePoint.addEventListener('mousedown', (e) => dragHandler.start(e));
+                document.addEventListener('mousemove', (e) => dragHandler.move(e));
+                document.addEventListener('mouseup', (e) => dragHandler.end(e));
+                
+                // Touch events
+                this.draggablePoint.addEventListener('touchstart', (e) => dragHandler.start(e), { passive: false });
+                document.addEventListener('touchmove', (e) => dragHandler.move(e), { passive: false });
+                document.addEventListener('touchend', (e) => dragHandler.end(e), { passive: false });
+            }
+
+            createHours() {
+                this.hoursContainer.innerHTML = '';
+                
+                // Horas externas (1-12)
+                this.createHourNumbers(12, 45, 'hour', (i) => i === 0 ? '12' : i.toString());
+                
+                // Horas internas (00, 13-23)
+                this.createHourNumbers(12, 30, 'inner-hour', (i) => i === 0 ? '00' : (i + 12).toString());
+                
+                // Ocultar ponteiro durante seleção de horas
+                this.draggablePoint.classList.add('hidden');
+            }
+
+            createHourNumbers(count, radius, className, valueMapper) {
+                for (let i = 0; i < count; i++) {
+                    const angle = i * 30;
+                    const position = this.calculatePosition(angle, radius);
+                    const value = valueMapper(i);
+                    
+                    const span = this.createNumberElement(value, position, className);
+                    span.dataset.value = value.padStart(2, '0');
+                    
+                    this.addHourClickHandler(span);
+                    this.hoursContainer.appendChild(span);
+                }
+            }
+
+            createMinutes() {
+                this.minutesContainer.innerHTML = '';
+                this.snapAngles = [];
+
+                // Garantir que ponteiro esteja visível
+                this.draggablePoint.classList.remove('hidden');
+
+                for (let i = 0; i < 60; i++) {
+                    const angle = i * 6;
+                    this.snapAngles.push(angle);
+
+                    // Criar marca visual para o minuto
+                    const mark = document.createElement('div');
+                    mark.classList.add('minute-mark');
+
+                    // Diferenciar marcas principais (múltiplos de 5) das secundárias
+                    if (i % 5 !== 0) {
+                        mark.classList.add('minor-tick');
+                    }
+
+                    // Posicionamento da marca
+                    mark.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+                    mark.style.left = '50%';
+                    mark.style.top = '11%';
+                    this.clockContainer.appendChild(mark);
+
+                    // Criar TODOS os números de minutos (0-59)
+                    const position = this.calculatePosition(angle, 40);
+                    const value = i.toString().padStart(2, '00');
+
+                    const span = this.createNumberElement(value, position, 'minute');
+                    span.dataset.minute = value;
+
+                    // Ocultar números que NÃO são múltiplos de 5 (como era antes)
+                    if (i % 5 !== 0) {
+                        span.style.opacity = '0';
+                    }
+
+                    this.addMinuteClickHandler(span);
+                    this.minutesContainer.appendChild(span);
+                }
+
+                // Posição inicial do ponteiro
+                this.lastAngle = 0;
+                this.updatePointerRotation(0);
+                this.minuteInput.value = '00';
+            }
+
+            calculatePosition(angle, radius) {
+                const x = 50 + Math.sin(angle * Math.PI / 180) * radius;
+                const y = 50 - Math.cos(angle * Math.PI / 180) * radius;
+                return { x, y };
+            }
+
+            createNumberElement(text, position, className) {
+                const span = document.createElement('span');
+                span.textContent = text;
+                span.style.top = `${position.y}%`;
+                span.style.left = `${position.x}%`;
+                span.style.transform = 'translate(-50%, -50%)';
+                span.classList.add(className);
+                return span;
+            }
+
+            addHourClickHandler(span) {
+                span.addEventListener('mouseover', () => {
+                    if (this.currentStep === 'hora') {
+                        this.hourInput.value = span.dataset.value;
+                    }
+                });
+
+                span.addEventListener('click', () => {
+                    if (this.currentStep === 'hora') {
+                        this.selectHour(span.dataset.value);
+                    }
+                });
+            }
+
+            addMinuteClickHandler(span) {
+                span.addEventListener('mouseenter', () => {
+                    if (this.currentStep === 'minuto') {
+                        this.minuteInput.value = span.textContent;
+                    }
+                });
+
+                span.addEventListener('click', () => {
+                    if (this.currentStep === 'minuto') {
+                        this.selectMinute(span.textContent, parseInt(span.dataset.minute) * 6);
+                    }
+                });
+            }
+
+            selectHour(hour) {
+                this.selectedHour = hour;
+                this.hourInput.value = hour;
+                this.hoursContainer.style.display = 'none';
+                this.minutesContainer.style.display = 'block';
+                this.currentStep = 'minuto';
+                this.timeLabel.textContent = 'Selecione os minutos';
+                this.createMinutes();
+            }
+
+            selectMinute(minute, angle) {
+                this.selectedMinute = minute;
+                this.minuteInput.value = minute;
+                this.confirmButton.style.display = 'block';
+                this.updatePointerRotationSmooth(angle);
+            }
+
+            updatePointerRotationSmooth(targetAngle) {
+                const normalizedTarget = this.normalizeAngle(targetAngle);
+                const normalizedCurrent = this.normalizeAngle(this.lastAngle);
+                
+                let finalAngle = normalizedTarget;
+                
+                const diff = normalizedTarget - normalizedCurrent;
+                if (Math.abs(diff) > 180) {
+                    if (diff > 0) {
+                        finalAngle = normalizedTarget - 360;
+                    } else {
+                        finalAngle = normalizedTarget + 360;
+                    }
+                }
+                
+                this.lastAngle = finalAngle;
+                this.draggablePoint.style.transform = `translateX(-50%) rotate(${finalAngle}deg)`;
+            }
+
+            normalizeAngle(angle) {
+                while (angle < 0) angle += 360;
+                while (angle >= 360) angle -= 360;
+                return angle;
+            }
+
+            updatePointerRotation(angle) {
+                this.draggablePoint.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+                this.lastAngle = angle;
+            }
+
+            getCenterCoordinates() {
+                const rect = this.clockContainer.getBoundingClientRect();
+                return {
+                    x: rect.left + rect.width / 2,
+                    y: rect.top + rect.height / 2
+                };
+            }
+
+            recalculatePositions() {
+                if (this.currentStep === 'minuto' && this.snapAngles.length > 0) {
+                    this.createMinutes();
+                }
+            }
+
+            debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+        }
+
+        // Classe para gerenciar o arrasto
+        class DragHandler {
+            constructor(clock) {
+                this.clock = clock;
+                this.lastSnappedAngle = 0;
+            }
+
+            start(e) {
+                if (this.clock.currentStep !== 'minuto') return;
+                
+                e.preventDefault();
+                this.clock.isDragging = true;
+                this.clock.draggablePoint.classList.add('grabbing');
+                this.lastSnappedAngle = this.clock.lastAngle;
+            }
+
+            move(e) {
+                if (!this.clock.isDragging || this.clock.currentStep !== 'minuto') return;
+                
+                e.preventDefault();
+                
+                const coords = this.getEventCoordinates(e);
+                const center = this.clock.getCenterCoordinates();
+                
+                const rawAngle = this.calculateAngle(coords, center);
+                const snappedAngle = this.findClosestSnapAngle(rawAngle);
+                
+                const smoothAngle = this.calculateSmoothTransition(snappedAngle);
+                const minute = this.angleToMinute(snappedAngle);
+                
+                this.clock.updatePointerRotation(smoothAngle);
+                this.clock.minuteInput.value = minute;
+                this.clock.selectedMinute = minute;
+                this.clock.confirmButton.style.display = 'block';
+                
+                this.lastSnappedAngle = smoothAngle;
+            }
+
+            calculateSmoothTransition(targetAngle) {
+                const diff = targetAngle - this.lastSnappedAngle;
+                
+                if (Math.abs(diff) > 180) {
+                    if (diff > 0) {
+                        return this.lastSnappedAngle + (diff - 360);
+                    } else {
+                        return this.lastSnappedAngle + (diff + 360);
+                    }
+                }
+                
+                return targetAngle;
+            }
+
+            end(e) {
+                if (this.clock.isDragging) {
+                    e.preventDefault();
+                    this.clock.isDragging = false;
+                    this.clock.draggablePoint.classList.remove('grabbing');
+                    
+                    const normalizedAngle = this.clock.normalizeAngle(this.lastSnappedAngle);
+                    this.clock.updatePointerRotation(normalizedAngle);
+                    this.clock.lastAngle = normalizedAngle;
+                }
+            }
+
+            getEventCoordinates(e) {
+                if (e.touches && e.touches.length > 0) {
+                    return {
+                        x: e.touches[0].clientX,
+                        y: e.touches[0].clientY
+                    };
+                }
+                return {
+                    x: e.clientX,
+                    y: e.clientY
+                };
+            }
+
+            calculateAngle(coords, center) {
+                const dx = coords.x - center.x;
+                const dy = coords.y - center.y;
+                
+                let angle = Math.atan2(dx, -dy) * (180 / Math.PI);
+                if (angle < 0) {
+                    angle += 360;
+                }
+                return angle;
+            }
+
+            findClosestSnapAngle(targetAngle) {
+                return this.clock.snapAngles.reduce((closest, current) => {
+                    const diffCurrent = this.getAngleDifference(targetAngle, current);
+                    const diffClosest = this.getAngleDifference(targetAngle, closest);
+                    return diffCurrent < diffClosest ? current : closest;
+                });
+            }
+
+            getAngleDifference(angle1, angle2) {
+                let diff = Math.abs(angle1 - angle2);
+                return diff > 180 ? 360 - diff : diff;
+            }
+
+            angleToMinute(angle) {
+                return Math.round(angle / 6).toString().padStart(2, '0');
+            }
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            new ResponsiveClock();
+        });
+    </script>
+</body>
+</html>
