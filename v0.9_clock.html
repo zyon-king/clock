@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relógio Circular Responsivo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.1),
+                0 8px 16px rgba(0, 0, 0, 0.06),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .time-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .time-label {
+            font-size: clamp(16px, 3vw, 20px);
+            margin-bottom: 15px;
+            text-align: center;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .time-input-container {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            border: 2px solid #e1e8ed;
+            padding: 12px 20px;
+            border-radius: 15px;
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.06),
+                0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .time-input-container:hover {
+            border-color: #3498db;
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.06),
+                0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .time-input-container input {
+            width: clamp(45px, 10vw, 60px);
+            font-size: clamp(28px, 6vw, 40px);
+            border: none;
+            text-align: center;
+            background-color: transparent;
+            color: #2c3e50;
+            font-weight: bold;
+            outline: none;
+        }
+        
+        .time-input-container span {
+            font-size: clamp(28px, 6vw, 40px);
+            margin: 0 10px;
+            color: #3498db;
+            font-weight: bold;
+        }
+        
+        .clock {
+            position: relative;
+            width: min(400px, 90vw);
+            height: min(400px, 90vw);
+            border-radius: 50%;
+            background: linear-gradient(145deg, #ffffff, #f8f9fa);
+            margin: 0 auto;
+            touch-action: none;
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+        
+        .clock .numbers {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .clock .numbers span {
+            position: absolute;
+            font-size: clamp(16px, 2.5vw, 24px);
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            color: #2c3e50;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+        }
+        
+        .clock .numbers span:hover {
+            background: linear-gradient(145deg, #3498db, #2980b9);
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+        }
+        
+        .clock .numbers span.hour {
+            font-weight: bold;
+        }
+        
+        .clock .numbers span.inner-hour {
+            font-size: clamp(14px, 2vw, 18px);
+            width: 30px;
+            height: 30px;
+            color: #7f8c8d;
+        }
+        
+        .minute-mark {
+            position: absolute;
+            width: 2px; /* Standard width for major ticks */
+            height: 12px; /* Standard height for major ticks */
+            background-color: #bdc3c7;
+            transform-origin: 50% 100%; /* Rotate from the center bottom */
+            z-index: 10;
+            border-radius: 1px;
+            top: 0%; /* Position at the top edge of the clock */
+            left: 50%;
+            transform: translateX(-50%); /* Center horizontally */
+        }
+
+        .minute-mark.minor-tick {
+            width: 1px;
+            height: 8px;
+            background-color: #bdc3c7;
+        }
+        
+        .minute-mark:hover {
+            background: linear-gradient(145deg, #e74c3c, #c0392b);
+            cursor: grab;
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+            z-index: 1001;
+        }
+        
+        #confirm-button {
+            margin-top: 25px;
+            padding: 12px 30px;
+            font-size: clamp(16px, 3vw, 18px);
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(145deg, #27ae60, #2ecc71);
+            color: #fff;
+            cursor: pointer;
+            touch-action: manipulation;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+        }
+        
+        #confirm-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+        }
+        
+        #confirm-button:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="time-container">
+            <div class="time-label" id="time-label">Selecione a hora</div>
+            <div class="time-input-container">
+                <input type="text" id="hour-input" disabled>
+                <span>:</span>
+                <input type="text" id="minute-input" disabled>
+            </div>
+            <button id="confirm-button" style="display: none;">Confirmar</button>
+        </div>
+        
+        <div class="clock" id="clock-container">
+            <div class="numbers" id="hours"></div>
+            <div class="numbers" id="minutes" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let horaSelecionada = null;
+        let minutoSelecionado = null;
+        let etapa = 'hora';
+
+        const clockContainer = document.getElementById('clock-container');
+
+        for (let i = 0; i < 12; i++) {
+            const angle = i * 30;
+            const x = 50 + Math.sin(angle * Math.PI / 180) * 45;
+            const y = 50 - Math.cos(angle * Math.PI / 180) * 45;
+            
+            const span = document.createElement('span');
+            span.textContent = i === 0 ? '12' : i;
+            span.style.top = `${y}%`;
+            span.style.left = `${x}%`;
+            span.style.transform = 'translate(-50%, -50%)';
+            span.classList.add('hour');
+            span.dataset.value = i === 0 ? '12' : i;
+            
+            span.addEventListener('mouseover', () => {
+                document.getElementById('hour-input').value = span.dataset.value;
+            });
+            
+            span.addEventListener('click', () => {
+                if (etapa === 'hora') {
+                    horaSelecionada = span.dataset.value;
+                    document.getElementById('hour-input').value = horaSelecionada;
+                    document.getElementById('hours').style.display = 'none';
+                    document.getElementById('minutes').style.display = 'block';
+                    etapa = 'minuto';
+                    document.getElementById('time-label').innerText = 'Selecione os minutos';
+                    criarMinutos();
+                }
+            });
+            
+            document.getElementById('hours').appendChild(span);
+        }
+
+        for (let i = 0; i < 12; i++) {
+            const angle = i * 30;
+            const x = 50 + Math.sin(angle * Math.PI / 180) * 30;
+            const y = 50 - Math.cos(angle * Math.PI / 180) * 30;
+            
+            const span = document.createElement('span');
+            span.textContent = i + 13;
+            if (i === 11) span.textContent = '00';
+            span.style.top = `${y}%`;
+            span.style.left = `${x}%`;
+            span.style.transform = 'translate(-50%, -50%)';
+            span.classList.add('inner-hour');
+            span.dataset.value = i === 11 ? '00' : i + 13;
+            
+            span.addEventListener('mouseover', () => {
+                document.getElementById('hour-input').value = span.dataset.value;
+            });
+            
+            span.addEventListener('click', () => {
+                if (etapa === 'hora') {
+                    horaSelecionada = span.dataset.value;
+                    document.getElementById('hour-input').value = horaSelecionada;
+                    document.getElementById('hours').style.display = 'none';
+                    document.getElementById('minutes').style.display = 'block';
+                    etapa = 'minuto';
+                    document.getElementById('time-label').innerText = 'Selecione os minutos';
+                    criarMinutos();
+                }
+            });
+            
+            document.getElementById('hours').appendChild(span);
+        }
+
+        function criarMinutos() {
+            // Clear existing minute marks if any, to prevent duplicates on re-render
+            const existingMinuteMarks = clockContainer.querySelectorAll('.minute-mark');
+            existingMinuteMarks.forEach(mark => mark.remove());
+
+            for (let i = 0; i < 60; i++) {
+                const angle = i * 6; // 360 degrees / 60 minutes = 6 degrees per minute
+                
+                // Create visual minute mark
+                const mark = document.createElement('div');
+                mark.classList.add('minute-mark');
+
+                // Differentiate major marks (multiples of 5) from minor ones
+                if (i % 5 !== 0) {
+                    mark.classList.add('minor-tick');
+                } else {
+                    // For major ticks (every 5 minutes), make them slightly longer
+                    mark.style.height = '15px'; 
+                    mark.style.width = '2px';
+                }
+
+                // Position the mark at the top edge of the clock and rotate it
+                mark.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+                
+                // Set the transform origin to the center bottom of the clock element
+                // This makes the marks rotate around the center of the clock
+                mark.style.transformOrigin = '50% 200px'; /* Adjust 200px based on clock size */
+
+                mark.dataset.value = String(i).padStart(2, '0'); // Store minute value for interaction
+                
+                mark.addEventListener('mouseover', () => {
+                    document.getElementById('minute-input').value = mark.dataset.value;
+                });
+
+                mark.addEventListener('click', () => {
+                    minutoSelecionado = mark.dataset.value;
+                    document.getElementById('minute-input').value = minutoSelecionado;
+                    document.getElementById('confirm-button').style.display = 'block';
+                });
+
+                // The numerical spans for minutes are what were intended to be interactive
+                // The visual marks are separate, so they don't need to be hidden initially
+                
+                document.getElementById('minutes').appendChild(mark); // Append marks to the minutes container
+
+                // Create numerical spans for every 5 minutes
+                if (i % 5 === 0) {
+                    const x = 50 + Math.sin(angle * Math.PI / 180) * 40; // Adjust radius as needed
+                    const y = 50 - Math.cos(angle * Math.PI / 180) * 40; // Adjust radius as needed
+
+                    const span = document.createElement('span');
+                    span.textContent = String(i).padStart(2, '0');
+                    span.style.top = `${y}%`;
+                    span.style.left = `${x}%`;
+                    span.style.transform = 'translate(-50%, -50%)';
+
+                    span.addEventListener('mouseover', () => {
+                        document.getElementById('minute-input').value = span.textContent;
+                    });
+
+                    span.addEventListener('click', () => {
+                        minutoSelecionado = span.textContent;
+                        document.getElementById('minute-input').value = minutoSelecionado;
+                        document.getElementById('confirm-button').style.display = 'block';
+                    });
+                    document.getElementById('minutes').appendChild(span);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
