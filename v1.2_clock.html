@@ -13,11 +13,19 @@
             min-height: 100vh;
             background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d); /* Gradiente de fundo */
             font-family: 'Orbitron', sans-serif; /* Orbitron para o corpo */
-            color: #00f0ff; /* Azul neon */
+            color: #00ccff; /* Azul neon */
             text-shadow: 0 0 20px rgba(0, 255, 204, 0.8), 0 0 30px rgba(0, 255, 204, 0.6);
             text-align: center;
             margin: 1%;
             position: relative; 
+        }        
+        
+        @media (max-width: 400px) {
+            .container {
+                /* Em telas muito pequenas, margem ainda menor */
+                margin-left: 10px;
+                margin-right: 10px;
+            }
         }
 
         /* --- Estilos para o RELÓGIO DIGITAL (que vai para o canto superior direito) --- */
@@ -114,40 +122,50 @@
         .time-input-container {
             display: flex;
             align-items: center;
-            background: linear-gradient(145deg, #ffffff, #f0f0f0);
             border: 2px solid #e1e8ed;
-            padding: 12px 20px;
+            padding: ;
             border-radius: 15px;
+            border-color: #3498db;
             box-shadow: 
                 inset 0 2px 4px rgba(0, 0, 0, 0.06),
-                0 1px 3px rgba(0, 0, 0, 0.1);
+                0 0 0 3px rgba(52, 152, 219, 0.1);
             transition: all 0.3s ease;
         }
+        
+        .time-input-container input {
+        	color: #00ccff; /* Azul neon */
+            text-shadow: 0 0 5px rgba(0, 255, 204, 0.8), 0 0 20px rgba(0, 255, 204, 0.6);
+            font-family: 'Orbitron', sans-serif;
+            width: clamp(28px, 11vw, 56px);
+            font-size: clamp(20px, 5vw, 28px);
+            border: none;
+            text-align: center;
+            background-color: transparent;
+            font-weight: bold;
+            outline: none;
+        }
+
         
         .time-input-container:hover {
             border-color: #3498db;
             box-shadow: 
                 inset 0 2px 4px rgba(0, 0, 0, 0.06),
                 0 0 0 3px rgba(52, 152, 219, 0.1);
+            background-color: transparent;
         }
         
         .time-input-container input {
-        	font-family: 'Orbitron', sans-serif; 
-            width: clamp(65px, 10vw, 60px);
-            font-size: clamp(28px, 6vw, 40px);
-            border: none;
-            text-align: center;
             background-color: transparent;
-            color: #2c3e50;
-            font-weight: bold;
             outline: none;
         }
         
         .time-input-container span {
-            font-size: clamp(28px, 6vw, 40px);
-            margin: 0 10px;
-            color: black;
+            font-size: clamp(20px, 5vw, 28px);
+            border: none;
+            text-align: center;
+            background-color: transparent;
             font-weight: bold;
+            outline: none;
         }
         
         .clock { /* Este é o relógio circular */
@@ -239,7 +257,7 @@
         
         #confirm-button {
             margin-top: 25px;
-            padding: 12px 30px;
+            padding: 8px 20px;
             font-size: clamp(16px, 3vw, 18px);            
         	font-family: 'Orbitron', sans-serif; 
             border: none;
@@ -250,12 +268,11 @@
             touch-action: manipulation;
             font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
         }
         
         #confirm-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
         }
         
         #confirm-button:active {
@@ -278,7 +295,7 @@
                 <span>:</span>
                 <input type="text" id="minute-input" disabled>
             </div>
-            <button id="confirm-button" style="display: none;">Confirmar</button>
+            <button id="confirm-button" style="display: ;">Confirmar</button>
          </div>
          
          <div class="clock" id="clock-selector-container"> <div class="numbers" id="hours"></div>
